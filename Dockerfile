@@ -24,14 +24,19 @@ RUN apt-get update && \
 
 WORKDIR /go/src/github.com/zitadel/zitadel
 
+COPY go.mod go.sum ./
+
+RUN go mod download
+
 COPY . .
 
-RUN make core_build
+RUN make core_api && \
+    make core_static && \
+    make core_assets
 
-RUN go build -o zitadel -v -ldflags="-s -w"
+RUN go build -o /app/zitadel -v -ldflags="-s -w"
 
 COPY build/entrypoint.sh /app/entrypoint.sh
-COPY zitadel /app/zitadel
 
 RUN useradd -s "" --home / zitadel && \
     chown zitadel /app/zitadel && \
