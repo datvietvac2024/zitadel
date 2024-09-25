@@ -12,8 +12,8 @@ import (
 	"github.com/zitadel/zitadel/internal/zerrors"
 )
 
-// ResendInitialMail resend initial mail and changes email if provided
-func (c *Commands) ResendInitialMail(ctx context.Context, userID string, email domain.EmailAddress, resourceOwner string, initCodeGenerator crypto.Generator, authRequestID string) (objectDetails *domain.ObjectDetails, err error) {
+// ResendInitialUser resend initial user and changes email or phone if provided
+func (c *Commands) ResendInitialUser(ctx context.Context, userID string, email domain.EmailAddress, phone domain.PhoneNumber, resourceOwner string, initCodeGenerator crypto.Generator, authRequestID string) (objectDetails *domain.ObjectDetails, err error) {
 	if userID == "" {
 		return nil, zerrors.ThrowInvalidArgument(nil, "COMMAND-2n8vs", "Errors.User.UserIDMissing")
 	}
@@ -31,9 +31,14 @@ func (c *Commands) ResendInitialMail(ctx context.Context, userID string, email d
 	var events []eventstore.Command
 	userAgg := UserAggregateFromWriteModel(&existingCode.WriteModel)
 	if email != "" && existingCode.Email != email {
-		changedEvent, _ := existingCode.NewChangedEvent(ctx, userAgg, email)
+		changedEvent, _ := existingCode.NewEmailChangedEvent(ctx, userAgg, email)
 		events = append(events, changedEvent)
 	}
+	if phone != "" && existingCode.Phone != phone {
+		changedEvent, _ := existingCode.NewPhoneChangedEvent(ctx, userAgg, phone)
+		events = append(events, changedEvent)
+	}
+
 	initCode, err := domain.NewInitUserCode(initCodeGenerator)
 	if err != nil {
 		return nil, err
@@ -41,7 +46,13 @@ func (c *Commands) ResendInitialMail(ctx context.Context, userID string, email d
 	if authRequestID == "" {
 		authRequestID = existingCode.AuthRequestID
 	}
-	events = append(events, user.NewHumanInitialCodeAddedEvent(ctx, userAgg, initCode.Code, initCode.Expiry, authRequestID))
+
+	notifyType := domain.NotificationTypeEmail
+	if existingCode.Phone != "" {
+		notifyType = domain.NotificationTypeSms
+	}
+
+	events = append(events, user.NewHumanInitialCodeAddedEvent(ctx, userAgg, initCode.Code, initCode.Expiry, authRequestID, notifyType))
 	pushedEvents, err := c.eventstore.Push(ctx, events...)
 	if err != nil {
 		return nil, err
@@ -79,7 +90,10 @@ func (c *Commands) HumanVerifyInitCode(ctx context.Context, userID, resourceOwne
 	commands := []eventstore.Command{
 		user.NewHumanInitializedCheckSucceededEvent(ctx, userAgg),
 	}
-	if !existingCode.IsEmailVerified {
+
+	if existingCode.Phone != "" && !existingCode.IsPhoneVerified {
+		commands = append(commands, user.NewHumanPhoneVerifiedEvent(ctx, userAgg))
+	} else if existingCode.Email != "" && !existingCode.IsEmailVerified {
 		commands = append(commands, user.NewHumanEmailVerifiedEvent(ctx, userAgg))
 	}
 	if password != "" {

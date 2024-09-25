@@ -18,6 +18,7 @@ const (
 
 type registerFormData struct {
 	Email        domain.EmailAddress `schema:"email"`
+	Phone        domain.PhoneNumber  `schema:"phone"`
 	Username     string              `schema:"username"`
 	Firstname    string              `schema:"firstname"`
 	Lastname     string              `schema:"lastname"`
@@ -199,6 +200,9 @@ func (d registerFormData) toHumanDomain() *domain.Human {
 		},
 		Email: &domain.Email{
 			EmailAddress: d.Email,
+		},
+		Phone: &domain.Phone{
+			PhoneNumber: d.Phone,
 		},
 	}
 }

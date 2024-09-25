@@ -103,7 +103,7 @@ func (h *ChangeHuman) Changed() bool {
 	return false
 }
 
-func (c *Commands) AddUserHuman(ctx context.Context, resourceOwner string, human *AddHuman, allowInitMail bool, alg crypto.EncryptionAlgorithm) (err error) {
+func (c *Commands) AddUserHuman(ctx context.Context, resourceOwner string, human *AddHuman, allowInit bool, alg crypto.EncryptionAlgorithm) (err error) {
 	if resourceOwner == "" {
 		return zerrors.ThrowInvalidArgument(nil, "COMMA-095xh8fll1", "Errors.Internal")
 	}
@@ -192,12 +192,12 @@ func (c *Commands) AddUserHuman(ctx context.Context, resourceOwner string, human
 	cmds := make([]eventstore.Command, 0, 3)
 	cmds = append(cmds, createCmd)
 
-	cmds, err = c.addHumanCommandEmail(ctx, filter, cmds, existingHuman.Aggregate(), human, alg, allowInitMail)
+	cmds, err = c.addHumanCommandEmail(ctx, filter, cmds, existingHuman.Aggregate(), human, alg, allowInit)
 	if err != nil {
 		return err
 	}
 
-	cmds, err = c.addHumanCommandPhone(ctx, filter, cmds, existingHuman.Aggregate(), human, alg)
+	cmds, err = c.addHumanCommandPhone(ctx, filter, cmds, existingHuman.Aggregate(), human, alg, allowInit)
 	if err != nil {
 		return err
 	}

@@ -472,7 +472,7 @@ func (s *Server) ResendHumanInitialization(ctx context.Context, req *mgmt_pb.Res
 	if err != nil {
 		return nil, err
 	}
-	details, err := s.command.ResendInitialMail(ctx, req.UserId, domain.EmailAddress(req.Email), authz.GetCtxData(ctx).OrgID, initCodeGenerator, "")
+	details, err := s.command.ResendInitialUser(ctx, req.UserId, domain.EmailAddress(req.Email), "", authz.GetCtxData(ctx).OrgID, initCodeGenerator, "")
 	if err != nil {
 		return nil, err
 	}

@@ -888,6 +888,7 @@
     },
     "ID": "ID",
     "EMAIL": "E-mail",
+    "EMAILEMPTY": "No e-mail defined",
     "PHONE": "Phone number",
     "PHONEEMPTY": "No phone number defined",
     "PHONEVERIFIED": "Phone number verified.",
