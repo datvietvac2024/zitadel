@@ -1,0 +1,81 @@
+include:
+  - project: "devops/ci/templates/ci-template"
+    ref: v1.4.6
+    file: "single-image-docker-buildx-golang.gitlab-ci.yml"
+
+variables:
+  DOCKER_IMAGE_NAME: vieuser
+
+test:unit-test:
+  script:
+    - go env -w GOMODCACHE=${CI_PROJECT_DIR}/_mod_cache GOCACHE=${CI_PROJECT_DIR}/_go_build_cache
+    - go get github.com/stretchr/testify/assert
+    - go test -v ./...
+
+deploy:development:
+  extends:
+    - .deploy-development
+  stage: deploy
+  image:
+    name: hub.vieon.vn:5000/base-curl-7.79.1:0d0916eb
+  environment:
+    name: develop
+  variables:
+    ENVIRONMENT: ${CI_ENVIRONMENT_NAME}
+    PROJECT_NAME: ${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+    IMAGE_NAME: ${DOCKER_HUB}/${DOCKER_IMAGE_NAME}
+    IMAGE_TAG: m-${CI_COMMIT_SHORT_SHA}
+  script:
+    - |
+      curl -u ${OPERATOR_USER}:${OPERATOR_PASS} -H "Content-type: application/json" -X POST ${OPERATOR_HOST} --data "{\"env\": \"${ENVIRONMENT}\", \"project\": \"${PROJECT_NAME}\", \"image\": \"${IMAGE_NAME}\", \"tag\": \"${IMAGE_TAG}\"}"
+
+deploy:testing:
+  extends:
+    - .deploy-testing
+  stage: deploy
+  image:
+    name: hub.vieon.vn:5000/base-curl-7.79.1:0d0916eb
+  environment:
+    name: testing
+  variables:
+    ENVIRONMENT: ${CI_ENVIRONMENT_NAME}
+    PROJECT_NAME: ${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+    IMAGE_NAME: ${DOCKER_HUB}/${DOCKER_IMAGE_NAME}
+  script:
+    - IMAGE_TAG=${CI_COMMIT_REF_NAME##*/}-${CI_COMMIT_SHORT_SHA}
+    - |
+      curl -u ${OPERATOR_USER}:${OPERATOR_PASS} -H "Content-type: application/json" -X POST ${OPERATOR_HOST} --data "{\"env\": \"${ENVIRONMENT}\", \"project\": \"${PROJECT_NAME}\", \"image\": \"${IMAGE_NAME}\", \"tag\": \"${IMAGE_TAG}\"}"
+
+deploy:staging:
+  extends:
+    - .deploy-testing
+  stage: deploy
+  image:
+    name: hub.vieon.vn:5000/base-curl-7.79.1:0d0916eb
+  environment:
+    name: staging
+  variables:
+    ENVIRONMENT: ${CI_ENVIRONMENT_NAME}
+    PROJECT_NAME: ${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}-staging
+    IMAGE_NAME: ${DOCKER_HUB}/${DOCKER_IMAGE_NAME}
+  script:
+    - IMAGE_TAG=${CI_COMMIT_REF_NAME##*/}-${CI_COMMIT_SHORT_SHA}
+    - |
+      curl -u ${OPERATOR_USER}:${OPERATOR_PASS} -H "Content-type: application/json" -X POST ${OPERATOR_HOST} --data "{\"env\": \"testing\", \"project\": \"${PROJECT_NAME}\", \"image\": \"${IMAGE_NAME}\", \"tag\": \"${IMAGE_TAG}\"}"
+
+deploy:production:
+  extends:
+    - .deploy-production
+  stage: promote
+  environment:
+    name: production
+  image:
+    name: hub.vieon.vn:5000/base-curl-7.79.1:0d0916eb
+  variables:
+    ENVIRONMENT: ${CI_ENVIRONMENT_NAME}
+    PROJECT_NAME: ${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}
+    IMAGE_NAME: ${DOCKER_HUB}/${DOCKER_IMAGE_NAME}
+  script:
+    - IMAGE_TAG=${CI_COMMIT_REF_NAME##*/}-${CI_COMMIT_SHORT_SHA}
+    - |
+      curl -u ${OPERATOR_USER}:${OPERATOR_PASS} -H "Content-type: application/json" -X POST ${OPERATOR_HOST} --data "{\"env\": \"${ENVIRONMENT}\", \"project\": \"${PROJECT_NAME}\", \"image\": \"${IMAGE_NAME}\", \"tag\": \"${IMAGE_TAG}\"}"
