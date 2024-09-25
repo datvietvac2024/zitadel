@@ -24,10 +24,6 @@ RUN apt-get update && \
 
 WORKDIR /go/src/github.com/zitadel/zitadel
 
-COPY go.mod go.sum ./
-
-RUN go mod download
-
 COPY . .
 
 RUN make core_build
