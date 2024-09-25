@@ -1,0 +1,1 @@
+# Mirror version: [v2.61.x](https://github.com/datvietvac2024/zitadel/tree/v2.61.x)
