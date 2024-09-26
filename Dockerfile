@@ -1,5 +1,9 @@
-
 FROM golang:1.23 AS builder
+
+ENV GO111MODULE=on \
+    CGO_ENABLED=1  \
+    GOARCH="amd64" \
+    GOOS=linux
 
 # Install dependencies for Node.js
 RUN apt-get update && \
@@ -29,15 +33,9 @@ RUN make core_api && \
     make core_static && \
     make core_assets
 
-RUN go build -o /app/zitadel -v -ldflags="-s -w -extldflags -static"
-
-
-FROM debian:latest as artifact
-
-RUN apt-get update && apt-get install ca-certificates -y
+RUN go build -o /app/zitadel -v -ldflags="-s -w"
 
 COPY build/entrypoint.sh /app/entrypoint.sh
-COPY --from=builder /app/zitadel  /app/zitadel
 
 RUN useradd -s "" --home / zitadel && \
     chown zitadel /app/zitadel && \
@@ -45,19 +43,19 @@ RUN useradd -s "" --home / zitadel && \
     chown zitadel /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
 
+
 WORKDIR /app
 ENV PATH="/app:${PATH}"
 
 USER zitadel
 ENTRYPOINT ["/app/entrypoint.sh"]
 
-FROM scratch as final
+FROM debian:latest
+LABEL maintainer="VieON"
 
-COPY --from=artifact /etc/passwd /etc/passwd
-COPY --from=artifact /etc/ssl/certs /etc/ssl/certs
-COPY --from=artifact /app/zitadel /app/zitadel
-
-HEALTHCHECK NONE
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+COPY --from=builder /app/zitadel /app/zitadel
 
 USER zitadel
 ENTRYPOINT ["/app/zitadel"]
