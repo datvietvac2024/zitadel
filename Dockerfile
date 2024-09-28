@@ -1,7 +1,7 @@
 FROM golang:1.23 AS builder
 
 ENV GO111MODULE=on \
-    CGO_ENABLED=1  \
+    CGO_ENABLED=0  \
     GOARCH="amd64" \
     GOOS=linux
 
