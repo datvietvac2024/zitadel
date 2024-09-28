@@ -7,6 +7,7 @@ variables:
   DOCKER_IMAGE_NAME: vieuser
 
 test:unit-test:
+  image: golang:1.23
   script:
     - go env -w GOMODCACHE=${CI_PROJECT_DIR}/_mod_cache GOCACHE=${CI_PROJECT_DIR}/_go_build_cache
     - go get github.com/stretchr/testify/assert
