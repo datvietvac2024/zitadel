@@ -73,7 +73,7 @@ InitPasswordDone:
 
 InitUser:
   Title: Activate User
-  Description: Verify your e-mail with the code below and set your password.
+  Description: Verify your e-mail/phone-number with the code below and set your password.
   CodeLabel: Code
   NewPasswordLabel: New Password
   NewPasswordConfirm: Confirm Password
@@ -82,7 +82,7 @@ InitUser:
 
 InitUserDone:
   Title: User Activated
-  Description: Email verified and Password successfully set
+  Description: User verified and Password successfully set
   NextButtonText: Next
   CancelButtonText: Cancel
 
@@ -194,6 +194,7 @@ PasswordChange:
   OldPasswordLabel: Old Password
   NewPasswordLabel: New Password
   NewPasswordConfirmLabel: Password confirmation
+  NewPasswordConfirmLabel: Password confirmation
   CancelButtonText: Cancel
   NextButtonText: Next
   Footer: Footer
@@ -234,6 +235,7 @@ RegistrationUser:
   Description: Enter your Userdata. Your email address will be used as your login name.
   DescriptionOrgRegister: Enter your Userdata.
   EmailLabel: E-Mail
+  PhoneLabel: Phone number
   UsernameLabel: Username
   FirstnameLabel: Given name
   LastnameLabel: Family name
@@ -417,6 +419,7 @@ Errors:
     Invalid: Invalid userdata
     DomainNotAllowedAsUsername: Domain is already reserved and cannot be used
     NotAllowedToLink: User is not allowed to link with external login provider
+    EmailOrPhoneRequired: Email or phone number is required
     Profile:
       NotFound: Profile not found
       NotChanged: Profile not changed

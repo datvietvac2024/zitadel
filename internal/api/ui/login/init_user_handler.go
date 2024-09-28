@@ -114,7 +114,7 @@ func (l *Login) resendUserInit(w http.ResponseWriter, r *http.Request, authReq *
 		l.renderInitUser(w, r, authReq, userID, loginName, "", showPassword, err)
 		return
 	}
-	_, err = l.command.ResendInitialMail(setContext(r.Context(), userOrgID), userID, "", userOrgID, initCodeGenerator, authRequestID)
+	_, err = l.command.ResendInitialUser(setContext(r.Context(), userOrgID), userID, "", "", userOrgID, initCodeGenerator, authRequestID)
 	l.renderInitUser(w, r, authReq, userID, loginName, "", showPassword, err)
 }
 

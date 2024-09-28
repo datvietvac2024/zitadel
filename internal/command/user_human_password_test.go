@@ -1183,6 +1183,7 @@ func TestCommandSide_RequestSetPassword(t *testing.T) {
 								&user.NewAggregate("user1", "org1").Aggregate,
 								nil, time.Hour*1,
 								"",
+								domain.NotificationTypeEmail,
 							),
 						),
 						eventFromEventPusher(

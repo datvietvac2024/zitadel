@@ -34,8 +34,13 @@
         </div>
 
         <div class="lgn-field double">
+            <label class="lgn-label" for="phone">{{t "RegistrationUser.PhoneLabel"}}</label>
+            <input class="lgn-input" type="text" id="phone" name="phone" autocomplete="tel" value="{{ .Phone }}">
+        </div>
+
+        <div class="lgn-field double">
             <label class="lgn-label" for="email">{{t "RegistrationUser.EmailLabel"}}</label>
-            <input class="lgn-input" type="email" id="email" name="email" autocomplete="email" value="{{ .Email }}" required>
+            <input class="lgn-input" type="email" id="email" name="email" autocomplete="email" value="{{ .Email }}">
         </div>
 
         {{if .ShowUsername}}

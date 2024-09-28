@@ -558,6 +558,7 @@ type RegistrationUserScreenText struct {
 	FirstnameLabel         string
 	LastnameLabel          string
 	EmailLabel             string
+	PhoneLabel             string
 	UsernameLabel          string
 	LanguageLabel          string
 	GenderLabel            string

@@ -245,10 +245,11 @@ func HumanRegisteredEventMapper(event eventstore.Event) (eventstore.Event, error
 
 type HumanInitialCodeAddedEvent struct {
 	eventstore.BaseEvent `json:"-"`
-	Code                 *crypto.CryptoValue `json:"code,omitempty"`
-	Expiry               time.Duration       `json:"expiry,omitempty"`
-	TriggeredAtOrigin    string              `json:"triggerOrigin,omitempty"`
-	AuthRequestID        string              `json:"authRequestID,omitempty"`
+	Code                 *crypto.CryptoValue     `json:"code,omitempty"`
+	NotificationType     domain.NotificationType `json:"notificationType,omitempty"`
+	Expiry               time.Duration           `json:"expiry,omitempty"`
+	TriggeredAtOrigin    string                  `json:"triggerOrigin,omitempty"`
+	AuthRequestID        string                  `json:"authRequestID,omitempty"`
 }
 
 func (e *HumanInitialCodeAddedEvent) Payload() interface{} {
@@ -269,6 +270,7 @@ func NewHumanInitialCodeAddedEvent(
 	code *crypto.CryptoValue,
 	expiry time.Duration,
 	authRequestID string,
+	notificationType domain.NotificationType,
 ) *HumanInitialCodeAddedEvent {
 	return &HumanInitialCodeAddedEvent{
 		BaseEvent: *eventstore.NewBaseEventForPush(
@@ -278,6 +280,7 @@ func NewHumanInitialCodeAddedEvent(
 		),
 		Code:              code,
 		Expiry:            expiry,
+		NotificationType:  notificationType,
 		TriggeredAtOrigin: http.DomainContext(ctx).Origin(),
 		AuthRequestID:     authRequestID,
 	}
