@@ -1,7 +1,7 @@
 package path
 
 const (
-	HandlerPrefix  = "/console"
+	HandlerPrefix  = "/ui/console"
 	RedirectPath   = HandlerPrefix + "/auth/callback"
 	PostLogoutPath = HandlerPrefix + "/signedout"
 )
