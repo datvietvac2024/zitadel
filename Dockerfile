@@ -33,7 +33,7 @@ RUN make core_api && \
     make core_static && \
     make core_assets
 
-RUN go build -o /app/zitadel -v -tags musl -ldflags="-extldflags "-static" -s -w"
+RUN go build -o /app/zitadel -v -ldflags="-extldflags "-static" -s -w"
 
 COPY build/entrypoint.sh /app/entrypoint.sh
 
