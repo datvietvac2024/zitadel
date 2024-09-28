@@ -33,7 +33,7 @@ RUN make core_api && \
     make core_static && \
     make core_assets
 
-RUN go build -o /app/zitadel -v -ldflags="-s -w"
+RUN go build -o /app/zitadel -v -ldflags="-extldflags "-static" -s -w"
 
 COPY build/entrypoint.sh /app/entrypoint.sh
 
@@ -50,8 +50,10 @@ ENV PATH="/app:${PATH}"
 USER zitadel
 ENTRYPOINT ["/app/entrypoint.sh"]
 
-FROM debian:latest
+FROM alpine:3.17
 LABEL maintainer="VieON"
+
+RUN apk add libc6-compat
 
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/ssl/certs /etc/ssl/certs
