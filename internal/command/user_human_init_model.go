@@ -16,6 +16,9 @@ type HumanInitCodeWriteModel struct {
 	Email           domain.EmailAddress
 	IsEmailVerified bool
 
+	Phone           domain.PhoneNumber
+	IsPhoneVerified bool
+
 	Code             *crypto.CryptoValue
 	CodeCreationDate time.Time
 	CodeExpiry       time.Duration
@@ -41,12 +44,15 @@ func (wm *HumanInitCodeWriteModel) Reduce() error {
 			wm.UserState = domain.UserStateActive
 		case *user.HumanRegisteredEvent:
 			wm.Email = e.EmailAddress
+			wm.Phone = e.PhoneNumber
 			wm.UserState = domain.UserStateActive
 		case *user.HumanEmailChangedEvent:
 			wm.Email = e.EmailAddress
 			wm.IsEmailVerified = false
 		case *user.HumanEmailVerifiedEvent:
 			wm.IsEmailVerified = true
+		case *user.HumanPhoneVerifiedEvent:
+			wm.IsPhoneVerified = true
 		case *user.HumanInitialCodeAddedEvent:
 			wm.Code = e.Code
 			wm.CodeCreationDate = e.CreationDate()
@@ -90,11 +96,20 @@ func (wm *HumanInitCodeWriteModel) Query() *eventstore.SearchQueryBuilder {
 	return query
 }
 
-func (wm *HumanInitCodeWriteModel) NewChangedEvent(
+func (wm *HumanInitCodeWriteModel) NewEmailChangedEvent(
 	ctx context.Context,
 	aggregate *eventstore.Aggregate,
 	email domain.EmailAddress,
 ) (*user.HumanEmailChangedEvent, bool) {
 	changedEvent := user.NewHumanEmailChangedEvent(ctx, aggregate, email)
 	return changedEvent, wm.Email != email
+}
+
+func (wm *HumanInitCodeWriteModel) NewPhoneChangedEvent(
+	ctx context.Context,
+	aggregate *eventstore.Aggregate,
+	phone domain.PhoneNumber,
+) (*user.HumanPhoneChangedEvent, bool) {
+	changedEvent := user.NewHumanPhoneChangedEvent(ctx, aggregate, phone)
+	return changedEvent, wm.Phone != phone
 }

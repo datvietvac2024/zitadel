@@ -88,9 +88,22 @@ type AddLink struct {
 }
 
 func (h *AddHuman) Validate(hasher *crypto.Hasher) (err error) {
-	if err := h.Email.Validate(); err != nil {
-		return err
+	if h.Phone.Number == "" && h.Email.Address == "" {
+		return zerrors.ThrowInvalidArgument(nil, "V2-3g4h2", "Errors.User.EmailOrPhoneRequired")
 	}
+
+	if h.Email.Address != "" {
+		if err := h.Email.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if h.Phone.Number != "" {
+		if h.Phone.Number, err = h.Phone.Number.Normalize(); err != nil {
+			return err
+		}
+	}
+
 	if h.Username = strings.TrimSpace(h.Username); h.Username == "" {
 		return zerrors.ThrowInvalidArgument(nil, "V2-zzad3", "Errors.Invalid.Argument")
 	}
@@ -102,12 +115,6 @@ func (h *AddHuman) Validate(hasher *crypto.Hasher) (err error) {
 		return zerrors.ThrowInvalidArgument(nil, "USER-4hB7d", "Errors.User.Profile.LastNameEmpty")
 	}
 	h.ensureDisplayName()
-
-	if h.Phone.Number != "" {
-		if h.Phone.Number, err = h.Phone.Number.Normalize(); err != nil {
-			return err
-		}
-	}
 
 	for _, metadataEntry := range h.Metadata {
 		if err := metadataEntry.Valid(); err != nil {
@@ -174,7 +181,7 @@ type humanCreationCommand interface {
 }
 
 //nolint:gocognit
-func (c *Commands) AddHumanCommand(human *AddHuman, orgID string, hasher *crypto.Hasher, codeAlg crypto.EncryptionAlgorithm, allowInitMail bool) preparation.Validation {
+func (c *Commands) AddHumanCommand(human *AddHuman, orgID string, hasher *crypto.Hasher, codeAlg crypto.EncryptionAlgorithm, allowInit bool) preparation.Validation {
 	return func() (_ preparation.CreateCommands, err error) {
 		if err := human.Validate(hasher); err != nil {
 			return nil, err
@@ -238,12 +245,12 @@ func (c *Commands) AddHumanCommand(human *AddHuman, orgID string, hasher *crypto
 			cmds := make([]eventstore.Command, 0, 3)
 			cmds = append(cmds, createCmd)
 
-			cmds, err = c.addHumanCommandEmail(ctx, filter, cmds, a, human, codeAlg, allowInitMail)
+			cmds, err = c.addHumanCommandEmail(ctx, filter, cmds, a, human, codeAlg, allowInit)
 			if err != nil {
 				return nil, err
 			}
 
-			cmds, err = c.addHumanCommandPhone(ctx, filter, cmds, a, human, codeAlg)
+			cmds, err = c.addHumanCommandPhone(ctx, filter, cmds, a, human, codeAlg, allowInit)
 			if err != nil {
 				return nil, err
 			}
@@ -270,6 +277,10 @@ func (c *Commands) AddHumanCommand(human *AddHuman, orgID string, hasher *crypto
 }
 
 func (c *Commands) addHumanCommandEmail(ctx context.Context, filter preparation.FilterToQueryReducer, cmds []eventstore.Command, a *user.Aggregate, human *AddHuman, codeAlg crypto.EncryptionAlgorithm, allowInitMail bool) ([]eventstore.Command, error) {
+	if human.Email.Address == "" {
+		return cmds, nil
+	}
+
 	if human.Email.Verified {
 		cmds = append(cmds, user.NewHumanEmailVerifiedEvent(ctx, &a.Aggregate))
 	}
@@ -282,7 +293,7 @@ func (c *Commands) addHumanCommandEmail(ctx context.Context, filter preparation.
 		if err != nil {
 			return nil, err
 		}
-		return append(cmds, user.NewHumanInitialCodeAddedEvent(ctx, &a.Aggregate, initCode.Crypted, initCode.Expiry, human.AuthRequestID)), nil
+		return append(cmds, user.NewHumanInitialCodeAddedEvent(ctx, &a.Aggregate, initCode.Crypted, initCode.Expiry, human.AuthRequestID, domain.NotificationTypeEmail)), nil
 	}
 	if !human.Email.Verified {
 		emailCode, err := c.newEmailCode(ctx, filter, codeAlg)
@@ -305,21 +316,38 @@ func addLink(ctx context.Context, filter preparation.FilterToQueryReducer, a *us
 	return user.NewUserIDPLinkAddedEvent(ctx, &a.Aggregate, link.IDPID, link.DisplayName, link.IDPExternalID), nil
 }
 
-func (c *Commands) addHumanCommandPhone(ctx context.Context, filter preparation.FilterToQueryReducer, cmds []eventstore.Command, a *user.Aggregate, human *AddHuman, codeAlg crypto.EncryptionAlgorithm) ([]eventstore.Command, error) {
+func (c *Commands) addHumanCommandPhone(ctx context.Context, filter preparation.FilterToQueryReducer, cmds []eventstore.Command, a *user.Aggregate, human *AddHuman, codeAlg crypto.EncryptionAlgorithm, allowInitPhone bool) ([]eventstore.Command, error) {
 	if human.Phone.Number == "" {
 		return cmds, nil
 	}
+
 	if human.Phone.Verified {
 		return append(cmds, user.NewHumanPhoneVerifiedEvent(ctx, &a.Aggregate)), nil
 	}
-	phoneCode, err := c.newPhoneCode(ctx, filter, codeAlg)
-	if err != nil {
-		return nil, err
+
+	// if allowInitPhone, used for v1 api (system, admin, mgmt, auth):
+	// add init code if
+	// email not verified or
+	// user not registered and password set
+	if allowInitPhone && human.shouldAddInitCode() {
+		initCode, err := c.newUserInitCode(ctx, filter, codeAlg)
+		if err != nil {
+			return nil, err
+		}
+		return append(cmds, user.NewHumanInitialCodeAddedEvent(ctx, &a.Aggregate, initCode.Crypted, initCode.Expiry, human.AuthRequestID, domain.NotificationTypeSms)), nil
 	}
-	if human.Phone.ReturnCode {
-		human.PhoneCode = &phoneCode.Plain
+	if !human.Phone.Verified {
+		phoneCode, err := c.newPhoneCode(ctx, filter, codeAlg)
+		if err != nil {
+			return nil, err
+		}
+		if human.Phone.ReturnCode {
+			human.PhoneCode = &phoneCode.Plain
+		}
+		return append(cmds, user.NewHumanPhoneCodeAddedEventV2(ctx, &a.Aggregate, phoneCode.Crypted, phoneCode.Expiry, human.Phone.ReturnCode)), nil
 	}
-	return append(cmds, user.NewHumanPhoneCodeAddedEventV2(ctx, &a.Aggregate, phoneCode.Crypted, phoneCode.Expiry, human.Phone.ReturnCode)), nil
+
+	return cmds, nil
 }
 
 // Deprecated: use commands.NewUserHumanWriteModel, to remove deprecated eventstore.Filter
@@ -416,7 +444,7 @@ func (h *AddHuman) ensureDisplayName() {
 //   - have no authentication method (password / passwordless)
 func (h *AddHuman) shouldAddInitCode() bool {
 	return len(h.Links) == 0 &&
-		(!h.Email.Verified ||
+		((!h.Email.Verified && !h.Phone.Verified) ||
 			(!h.Passwordless && h.Password == ""))
 }
 
@@ -544,7 +572,12 @@ func (c *Commands) createHuman(ctx context.Context, orgID string, human *domain.
 		if err != nil {
 			return nil, nil, err
 		}
-		events = append(events, user.NewHumanInitialCodeAddedEvent(ctx, userAgg, initCode.Code, initCode.Expiry, ""))
+
+		notifyType := domain.NotificationTypeEmail
+		if human.Phone.PhoneNumber != "" {
+			notifyType = domain.NotificationTypeSms
+		}
+		events = append(events, user.NewHumanInitialCodeAddedEvent(ctx, userAgg, initCode.Code, initCode.Expiry, "", notifyType))
 	} else {
 		if human.Email != nil && human.EmailAddress != "" && human.IsEmailVerified {
 			events = append(events, user.NewHumanEmailVerifiedEvent(ctx, userAgg))
@@ -727,6 +760,9 @@ func AddHumanFromDomain(user *domain.Human, metadataList []*domain.Metadata, aut
 	}
 	if human.Username = strings.TrimSpace(human.Username); human.Username == "" {
 		human.Username = string(human.Email.Address)
+		if human.Phone.Number != "" {
+			human.Username = string(human.Phone.Number)
+		}
 	}
 	return human
 }

@@ -1085,7 +1085,8 @@ func (repo *AuthRequestRepo) nextSteps(ctx context.Context, request *domain.Auth
 	if expired || user.PasswordChangeRequired {
 		steps = append(steps, &domain.ChangePasswordStep{Expired: expired})
 	}
-	if !user.IsEmailVerified {
+
+	if user.Email != "" && !user.IsEmailVerified && !user.IsPhoneVerified {
 		steps = append(steps, &domain.VerifyEMailStep{
 			InitPassword: !user.PasswordSet,
 		})
@@ -1094,7 +1095,7 @@ func (repo *AuthRequestRepo) nextSteps(ctx context.Context, request *domain.Auth
 		steps = append(steps, &domain.ChangeUsernameStep{})
 	}
 
-	if expired || user.PasswordChangeRequired || !user.IsEmailVerified || user.UsernameChangeRequired {
+	if expired || user.PasswordChangeRequired || (!user.IsEmailVerified && !user.IsPhoneVerified) || user.UsernameChangeRequired {
 		return steps, nil
 	}
 
