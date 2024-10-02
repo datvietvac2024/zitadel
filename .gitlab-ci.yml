@@ -10,11 +10,11 @@ test:unit-test:
   image: golang:1.23
   script:
     - go env -w GOMODCACHE=${CI_PROJECT_DIR}/_mod_cache GOCACHE=${CI_PROJECT_DIR}/_go_build_cache
-#    - go mod download
-#    - go test -race -coverprofile=profile.cov ./...
-
-#    - go test -v ./...
-
+    - go mod download
+    - go test -race -coverprofile=profile.cov ./...
+  only:
+    refs:
+      - branch_with_unit_test
 deploy:development:
   extends:
     - .deploy-development
