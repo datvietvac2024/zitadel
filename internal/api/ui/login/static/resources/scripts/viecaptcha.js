@@ -79,7 +79,7 @@ async function fetchChallengeData() {
                 const payload = {
                     nonce: result.nonce,
                     hash: result.hash,
-                    mouse_moves: 10,
+                    mouse_moves: 100,
                     key_strokes: 10,
                     challenge: challengeData
                 };
