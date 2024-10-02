@@ -601,6 +601,7 @@ func TestCommandSide_DeactivateUserV2(t *testing.T) {
 								&user.NewAggregate("user1", "org1").Aggregate,
 								nil, time.Hour*1,
 								"",
+								domain.NotificationTypeEmail,
 							),
 						),
 					),

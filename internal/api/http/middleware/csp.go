@@ -55,6 +55,7 @@ func (csp *CSP) asMap(iframe []string) map[string]CSPSourceOptions {
 	frameAncestors := csp.FrameAncestors
 	if len(iframe) > 0 {
 		frameAncestors = CSPSourceOpts().AddHost(iframe...)
+		csp.ConnectSrc = csp.ConnectSrc.AddHost(iframe...)
 	}
 	return map[string]CSPSourceOptions{
 		"default-src":     csp.DefaultSrc,
