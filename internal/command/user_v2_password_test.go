@@ -70,7 +70,7 @@ func TestCommands_RequestPasswordReset(t *testing.T) {
 						),
 						eventFromEventPusher(
 							user.NewHumanInitialCodeAddedEvent(context.Background(), &user.NewAggregate("userID", "org1").Aggregate,
-								&crypto.CryptoValue{CryptoType: crypto.TypeEncryption, Algorithm: "enc", KeyID: "keyID", Crypted: []byte("code")}, 10*time.Second, ""),
+								&crypto.CryptoValue{CryptoType: crypto.TypeEncryption, Algorithm: "enc", KeyID: "keyID", Crypted: []byte("code")}, 10*time.Second, "", domain.NotificationTypeEmail),
 						),
 					),
 				),
@@ -168,7 +168,7 @@ func TestCommands_RequestPasswordResetReturnCode(t *testing.T) {
 						),
 						eventFromEventPusher(
 							user.NewHumanInitialCodeAddedEvent(context.Background(), &user.NewAggregate("userID", "org1").Aggregate,
-								&crypto.CryptoValue{CryptoType: crypto.TypeEncryption, Algorithm: "enc", KeyID: "keyID", Crypted: []byte("code")}, 10*time.Second, ""),
+								&crypto.CryptoValue{CryptoType: crypto.TypeEncryption, Algorithm: "enc", KeyID: "keyID", Crypted: []byte("code")}, 10*time.Second, "", domain.NotificationTypeEmail),
 						),
 					),
 				),
@@ -280,7 +280,7 @@ func TestCommands_RequestPasswordResetURLTemplate(t *testing.T) {
 						),
 						eventFromEventPusher(
 							user.NewHumanInitialCodeAddedEvent(context.Background(), &user.NewAggregate("userID", "org1").Aggregate,
-								&crypto.CryptoValue{CryptoType: crypto.TypeEncryption, Algorithm: "enc", KeyID: "keyID", Crypted: []byte("code")}, 10*time.Second, ""),
+								&crypto.CryptoValue{CryptoType: crypto.TypeEncryption, Algorithm: "enc", KeyID: "keyID", Crypted: []byte("code")}, 10*time.Second, "", domain.NotificationTypeEmail),
 						),
 					),
 				),
@@ -391,7 +391,7 @@ func TestCommands_requestPasswordReset(t *testing.T) {
 						),
 						eventFromEventPusher(
 							user.NewHumanInitialCodeAddedEvent(context.Background(), &user.NewAggregate("userID", "org1").Aggregate,
-								&crypto.CryptoValue{CryptoType: crypto.TypeEncryption, Algorithm: "enc", KeyID: "keyID", Crypted: []byte("code")}, 10*time.Second, ""),
+								&crypto.CryptoValue{CryptoType: crypto.TypeEncryption, Algorithm: "enc", KeyID: "keyID", Crypted: []byte("code")}, 10*time.Second, "", domain.NotificationTypeEmail),
 						),
 					),
 				),

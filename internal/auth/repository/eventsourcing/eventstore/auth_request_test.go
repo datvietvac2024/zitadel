@@ -152,6 +152,7 @@ type mockViewUser struct {
 	MFAInitSkipped           time.Time
 	PasswordlessInitRequired bool
 	PasswordlessTokens       user_view_model.WebAuthNTokens
+	Email                    string
 }
 
 type mockLoginPolicy struct {
@@ -940,12 +941,14 @@ func TestAuthRequestRepo_nextSteps(t *testing.T) {
 					PasswordlessVerification: testNow.Add(-5 * time.Minute),
 					MultiFactorVerification:  testNow.Add(-5 * time.Minute),
 				},
+
 				userViewProvider: &mockViewUser{
 					PasswordSet:            true,
 					PasswordlessTokens:     user_view_model.WebAuthNTokens{&user_view_model.WebAuthNView{ID: "id", State: int32(user_model.MFAStateReady)}},
 					PasswordChangeRequired: false,
 					IsEmailVerified:        false,
 					MFAMaxSetUp:            int32(domain.MFALevelMultiFactor),
+					Email:                  "email@gmail.com",
 				},
 				userEventProvider: &mockEventUser{},
 				lockoutPolicyProvider: &mockLockoutPolicy{
@@ -1351,6 +1354,7 @@ func TestAuthRequestRepo_nextSteps(t *testing.T) {
 				userViewProvider: &mockViewUser{
 					PasswordSet: true,
 					MFAMaxSetUp: int32(domain.MFALevelSecondFactor),
+					Email:       "mail@gmail.com",
 				},
 				userEventProvider: &mockEventUser{},
 				orgViewProvider:   &mockViewOrg{State: domain.OrgStateActive},
@@ -1383,6 +1387,7 @@ func TestAuthRequestRepo_nextSteps(t *testing.T) {
 					PasswordSet:            true,
 					PasswordChangeRequired: true,
 					MFAMaxSetUp:            int32(domain.MFALevelSecondFactor),
+					Email:                  "email@gmail.com",
 				},
 				userEventProvider: &mockEventUser{},
 				orgViewProvider:   &mockViewOrg{State: domain.OrgStateActive},
