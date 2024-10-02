@@ -1429,6 +1429,7 @@ func TestCommandSide_SetUpOrg(t *testing.T) {
 								},
 								1*time.Hour,
 								"",
+								domain.NotificationTypeEmail,
 							),
 						),
 						eventFromEventPusher(org.NewMemberAddedEvent(context.Background(),

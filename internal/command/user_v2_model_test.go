@@ -168,6 +168,7 @@ func TestCommandSide_userExistsWriteModel(t *testing.T) {
 								},
 								time.Hour*1,
 								"authRequestID",
+								domain.NotificationTypeEmail,
 							),
 						),
 					),
@@ -227,6 +228,7 @@ func TestCommandSide_userExistsWriteModel(t *testing.T) {
 								},
 								time.Hour*1,
 								"authRequestID",
+								domain.NotificationTypeEmail,
 							),
 						),
 						eventFromEventPusher(
@@ -283,6 +285,7 @@ func TestCommandSide_userExistsWriteModel(t *testing.T) {
 								},
 								time.Hour*1,
 								"authRequestID",
+								domain.NotificationTypeEmail,
 							),
 						),
 						eventFromEventPusher(
