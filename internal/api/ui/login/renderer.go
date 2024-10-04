@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"path"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/zitadel/logging"
 
+	"encoding/json"
 	"github.com/zitadel/zitadel/internal/api/authz"
 	http_mw "github.com/zitadel/zitadel/internal/api/http/middleware"
 	"github.com/zitadel/zitadel/internal/domain"
@@ -37,6 +39,55 @@ type Renderer struct {
 
 type LanguageData struct {
 	Lang string
+}
+
+type BaseResponse struct {
+	Code      int         `json:"code"`
+	ErrorCode string      `json:"error_code"`
+	Message   string      `json:"message"`
+	Data      interface{} `json:"data"`
+}
+
+type ChallengeData struct {
+	Challenge string `json:"challenge"`
+}
+
+var httpClient http.Client
+
+func loadCaptchaChallenges() string {
+	captchaRequest, err := http.NewRequest("GET", "https://dev-api.vieon.vn/viecaptcha/api/v2/pow/challenge", nil)
+	if err != nil {
+		return fmt.Sprintf("error creating request to load proof of work captcha challenges: %v", err)
+	}
+	response, err := httpClient.Do(captchaRequest)
+	if err != nil {
+		return fmt.Sprintf("error loading proof of work captcha challenges: %v", err)
+	}
+
+	responseBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Sprintf("error reading response body from load proof of work captcha challenges: %v", err)
+	}
+
+	if response.StatusCode != 200 {
+		return fmt.Sprintf(
+			"load proof of work captcha challenges api returned http %d: %s",
+			response.StatusCode, string(responseBytes),
+		)
+	}
+
+	var baseResp BaseResponse
+	err = json.Unmarshal(responseBytes, &baseResp)
+	if err != nil {
+		return fmt.Sprintf("error unmarshalling proof of work captcha challenges: %v", err)
+	}
+
+	dataRaw, _ := json.Marshal(baseResp.Data)
+	var cC ChallengeData
+	if err := json.Unmarshal(dataRaw, &cC); err != nil {
+		return fmt.Sprintf("error unmarshalling proof of work captcha challenges: %v", err)
+	}
+	return cC.Challenge
 }
 
 func CreateRenderer(pathPrefix string, staticStorage static.Storage, cookieName string) *Renderer {
@@ -237,6 +288,12 @@ func CreateRenderer(pathPrefix string, staticStorage static.Storage, cookieName 
 		},
 		"linkingUserPromptUrl": func() string {
 			return path.Join(r.pathPrefix, EndpointLinkingUserPrompt)
+		},
+		"captchaUrl": func() string {
+			return "https://dev-api.vieon.vn"
+		},
+		"challenge": func() string {
+			return loadCaptchaChallenges()
 		},
 	}
 	var err error

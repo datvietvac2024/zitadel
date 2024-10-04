@@ -65,7 +65,7 @@ func (h *headers) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	allowedHosts := authz.GetInstance(r.Context()).SecurityPolicyAllowedOrigins()
 	headers := w.Header()
-	headers.Set(http_utils.ContentSecurityPolicy, h.csp.Value(nonce, r.Host, allowedHosts))
+	//headers.Set(http_utils.ContentSecurityPolicy, h.csp.Value(nonce, r.Host, allowedHosts))
 	headers.Set(http_utils.XXSSProtection, "1; mode=block")
 	headers.Set(http_utils.StrictTransportSecurity, "max-age=31536000; includeSubDomains")
 	if len(allowedHosts) == 0 {
