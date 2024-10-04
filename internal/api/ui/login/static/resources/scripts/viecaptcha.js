@@ -62,14 +62,19 @@ async function fetchChallengeData() {
         // Chuyển đổi phản hồi thành JSON
         const challengeData = await response.json();
 
+        if (challengeData.code !== 0) {
+            console.log('Error fetching challenge data: ', challengeData);
+            throw new Error('Error fetching challenge data: ' + challengeData.message);
+        }
+
         // Tạo Web Worker
         return new Promise((resolve, reject) => {
             const worker = new Worker("./resources/scripts/worker.js");
 
             worker.postMessage({
-                salt: challengeData.salt,
-                timestamp: challengeData.timestamp,
-                difficulty: challengeData.difficulty
+                salt: challengeData.data?.salt,
+                timestamp: challengeData.data?.timestamp,
+                difficulty: challengeData.data?.difficulty
             });
 
             worker.onmessage = function(e) {
@@ -81,7 +86,7 @@ async function fetchChallengeData() {
                     hash: result.hash,
                     mouse_moves: 100,
                     key_strokes: 10,
-                    challenge: challengeData
+                    challenge: challengeData.data
                 };
 
                 // Trả về payload string (không cần lưu vào form)
