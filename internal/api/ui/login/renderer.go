@@ -39,7 +39,7 @@ type LanguageData struct {
 	Lang string
 }
 
-func CreateRenderer(pathPrefix string, staticStorage static.Storage, cookieName string) *Renderer {
+func CreateRenderer(pathPrefix string, staticStorage static.Storage, cookieName, captchaUrl string) *Renderer {
 	r := &Renderer{
 		pathPrefix:    pathPrefix,
 		staticStorage: staticStorage,
@@ -237,6 +237,9 @@ func CreateRenderer(pathPrefix string, staticStorage static.Storage, cookieName 
 		},
 		"linkingUserPromptUrl": func() string {
 			return path.Join(r.pathPrefix, EndpointLinkingUserPrompt)
+		},
+		"captchaUrl": func() string {
+			return captchaUrl
 		},
 	}
 	var err error

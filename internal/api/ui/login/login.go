@@ -45,7 +45,7 @@ type Config struct {
 	CSRFCookieName     string
 	Cache              middleware.CacheConfig
 	AssetCache         middleware.CacheConfig
-
+	CaptchaUrl         string
 	// LoginV2
 	DefaultOTPEmailURLV2 string
 }
@@ -92,7 +92,7 @@ func CreateLogin(config Config,
 	security := middleware.SecurityHeaders(csp(), login.cspErrorHandler)
 
 	login.router = CreateRouter(login, middleware.TelemetryHandler(IgnoreInstanceEndpoints...), oidcInstanceHandler, samlInstanceHandler, csrfInterceptor, cacheInterceptor, security, userAgentCookie, issuerInterceptor, accessHandler)
-	login.renderer = CreateRenderer(HandlerPrefix, staticStorage, config.LanguageCookieName)
+	login.renderer = CreateRenderer(HandlerPrefix, staticStorage, config.LanguageCookieName, config.CaptchaUrl)
 	login.parser = form.NewParser()
 	return login, nil
 }

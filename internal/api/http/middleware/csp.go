@@ -18,6 +18,7 @@ type CSP struct {
 	ManifestSrc    CSPSourceOptions
 	ConnectSrc     CSPSourceOptions
 	FormAction     CSPSourceOptions
+	WorkerSrc      CSPSourceOptions
 }
 
 var (
@@ -33,11 +34,12 @@ var (
 		FontSrc:        CSPSourceOptsSelf(),
 		ManifestSrc:    CSPSourceOptsSelf(),
 		ConnectSrc:     CSPSourceOptsSelf(),
+		WorkerSrc:      CSPSourceOptsSelf(),
 	}
 )
 
-func (csp *CSP) Value(nonce, host string, iframe []string) string {
-	valuesMap := csp.asMap(iframe)
+func (csp *CSP) Value(nonce, host string, allowHosts []string) string {
+	valuesMap := csp.asMap(allowHosts)
 
 	values := make([]string, 0, len(valuesMap))
 	for k, v := range valuesMap {
@@ -51,25 +53,33 @@ func (csp *CSP) Value(nonce, host string, iframe []string) string {
 	return strings.Join(values, ";")
 }
 
-func (csp *CSP) asMap(iframe []string) map[string]CSPSourceOptions {
+func (csp *CSP) asMap(allowHosts []string) map[string]CSPSourceOptions {
 	frameAncestors := csp.FrameAncestors
-	if len(iframe) > 0 {
-		frameAncestors = CSPSourceOpts().AddHost(iframe...)
-		csp.ConnectSrc = csp.ConnectSrc.AddHost(iframe...)
+	connectSrc := csp.ConnectSrc
+	scriptSrc := csp.ScriptSrc
+	styleSrc := csp.StyleSrc
+	workerSrc := csp.WorkerSrc
+	if len(allowHosts) > 0 {
+		frameAncestors = CSPSourceOpts().AddHost(allowHosts...)
+		connectSrc = csp.ConnectSrc.AddHost(allowHosts...)
+		scriptSrc = csp.ScriptSrc.AddHost(allowHosts...)
+		styleSrc = csp.StyleSrc.AddHost(allowHosts...)
+		workerSrc = csp.WorkerSrc.AddHost(allowHosts...)
 	}
 	return map[string]CSPSourceOptions{
 		"default-src":     csp.DefaultSrc,
-		"script-src":      csp.ScriptSrc,
+		"script-src":      scriptSrc,
 		"object-src":      csp.ObjectSrc,
-		"style-src":       csp.StyleSrc,
+		"style-src":       styleSrc,
 		"img-src":         csp.ImgSrc,
 		"media-src":       csp.MediaSrc,
 		"frame-src":       csp.FrameSrc,
 		"frame-ancestors": frameAncestors,
 		"font-src":        csp.FontSrc,
 		"manifest-src":    csp.ManifestSrc,
-		"connect-src":     csp.ConnectSrc,
+		"connect-src":     connectSrc,
 		"form-action":     csp.FormAction,
+		"worker-src":      workerSrc,
 	}
 }
 
