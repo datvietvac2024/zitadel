@@ -35,47 +35,48 @@ function setLoadingState(button, isLoading) {
 }
 (function(window, document, undefined){
     document.addEventListener('DOMContentLoaded', () => {
-        // Lấy tất cả các button trong form có type là submit
+        // Chọn tất cả các nút submit trong các biểu mẫu
         const buttons = document.querySelectorAll('form button[type="submit"]');
 
         buttons.forEach(button => {
-            // Đổi type của button thành button
+            // Thay đổi loại nút thành 'button' để ngăn chặn gửi mặc định
             button.type = 'button';
-            // Thêm sự kiện onClick
+            // Thêm sự kiện click
             button.addEventListener('click', async (event) => {
-                event.preventDefault();
-                setLoadingState(event.target, true);
-                let form = document.forms[0];
+                event.preventDefault(); // Ngăn chặn gửi mặc định
+                setLoadingState(event.target, true); // Hiển thị trạng thái đang tải
+
+                // Tham chiếu đến biểu mẫu chứa nút được nhấn
+                let form = event.target.closest('form');
 
                 if (form) {
-                    const challengeObject = await window.sqrCaptchaTrigger();
-                    const viechaptchaToken = await waitForCaptcha(challengeObject?.challenge_duration * 1000);
+                    try {
+                        // Kích hoạt captcha
+                        const challengeObject = await window.sqrCaptchaTrigger();
+                        const viechaptchaToken = await waitForCaptcha(challengeObject?.challenge_duration * 1000);
 
-                    // Loop through each element in the form và gửi request
-                    let xhr = new XMLHttpRequest();
-                    xhr.open(form.method, form.action, true);
+                        // Xác định URL hành động hiện tại của biểu mẫu
+                        const action = form.action || window.location.href;
+                        const url = new URL(action, window.location.origin);
 
-                    // Thêm challenge key vào header trực tiếp
-                    xhr.setRequestHeader('X-Viecaptcha-Token', viechaptchaToken);
+                        // Thêm viechaptchaToken vào query parameters
+                        url.searchParams.append('viechaptcha_token', viechaptchaToken);
 
-                    // Gửi dữ liệu form
-                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                    xhr.onload = function() {
-                        if (xhr.status >= 200 && xhr.status < 400) {
-                            // Sau khi xử lý xong, submit form thật
-                            document.open();
-                            document.write(xhr.responseText);
-                            document.close();
-                        } else {
-                            // Xử lý lỗi (nếu có)
-                            console.error("Error processing the request.");
-                        }
-                    };
+                        // Cập nhật hành động của biểu mẫu với URL mới có chứa viechaptchaToken
+                        form.action = url.toString();
 
-                    // Gửi dữ liệu form
-                    xhr.send(new URLSearchParams(new FormData(form)).toString());
+                        // Gửi biểu mẫu theo phương thức ban đầu (POST hoặc GET)
+                        form.submit();
+                    } catch (error) {
+                        console.error("captcha verification failed:", error);
+                        // Hiển thị thôncg báo lỗi cho người dùng
+                        alert("captcha verification failed. Please try again.");
+                    } finally {
+                        setLoadingState(event.target, false); // Ẩn trạng thái đang tải
+                    }
                 } else {
-                    console.log("Form not found");
+                    console.log("form not found");
+                    setLoadingState(event.target, false); // Ẩn trạng thái đang tải
                 }
             });
         });
