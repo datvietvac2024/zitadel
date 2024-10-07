@@ -53,14 +53,14 @@ function setLoadingState(button, isLoading) {
                     try {
                         // Kích hoạt captcha
                         const challengeObject = await window.sqrCaptchaTrigger();
-                        const viechaptchaToken = await waitForCaptcha(challengeObject?.challenge_duration * 1000);
+                        const viecaptchaToken = await waitForCaptcha(challengeObject?.challenge_duration * 1000);
 
                         // Xác định URL hành động hiện tại của biểu mẫu
                         const action = form.action || window.location.href;
                         const url = new URL(action, window.location.origin);
 
                         // Thêm viechaptchaToken vào query parameters
-                        url.searchParams.append('viechaptcha_token', viechaptchaToken);
+                        url.searchParams.append('viecaptcha_token', viecaptchaToken);
 
                         // Cập nhật hành động của biểu mẫu với URL mới có chứa viechaptchaToken
                         form.action = url.toString();
