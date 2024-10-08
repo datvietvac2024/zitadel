@@ -117,9 +117,14 @@
         <span class="fill-space"></span>
         <button class="lgn-raised-button lgn-primary" id="register-button" type="submit">{{t "RegistrationUser.NextButtonText"}}</button>
     </div>
+    <div id="captcha-container" class="captcha-container"
+         data-sqr-captcha-url="{{ captchaUrl }}"
+         data-sqr-captcha-callback="captchaCallback">
+    </div>
 </form>
 
 <script src="{{ resourceUrl "scripts/viecaptcha.js" }}"></script>
+<script src="{{ captchaUrl }}/viecaptcha/static/v2/captcha.js"></script>
 <script src="{{ resourceUrl "scripts/input_suffix_offset.js" }}"></script>
 <script src="{{ resourceUrl "scripts/form_submit.js" }}"></script>
 <script src="{{ resourceUrl "scripts/password_policy_check.js" }}"></script>
