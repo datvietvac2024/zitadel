@@ -174,7 +174,7 @@ func (u *userNotifier) reduceInitCodeAdded(event eventstore.Event) (*handler.Sta
 		}
 		notify := types.SendEmail(ctx, u.channels, string(template.Template), translator, notifyUser, colors, e)
 		if e.NotificationType == domain.NotificationTypeSms {
-			notify = types.SendSMSTwilio(ctx, u.channels, translator, notifyUser, colors, e)
+			notify = types.SendSMS(ctx, u.channels, translator, notifyUser, colors, e)
 		}
 		err = notify.SendUserInitCode(ctx, notifyUser, code, e.AuthRequestID)
 		if err != nil {
